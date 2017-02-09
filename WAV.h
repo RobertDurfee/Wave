@@ -41,6 +41,8 @@ struct WAV_DATA_HEADER
 #define FREQUENCY_MODULATION 0x1
 #define AMPLITUDE_MODULATION 0x2
 
+#define SIZE_OF_HEADERS	0x2C
+
 class Wave
 {
 public:
@@ -67,8 +69,8 @@ public:
 	void SetSampleRate(int sampleRate);
 	int GetSampleRate();
 
-	void SetDuration(int duration);
-	int GetDuration();
+	void SetDuration(double duration);
+	double GetDuration();
 
 	void SetWaveform(char * waveform);
 	char * GetWaveform();
@@ -84,6 +86,8 @@ private:
 
 	void SetHeaders(int samplerate, double duration);
 	void SetHeaders(RIFF_FILE_HEADER fileHeader, WAV_FORMAT_HEADER formatHeader, WAV_DATA_HEADER dataHeader);
+	void SetHeaders(char * headers);
+	char * GetHeaders();
 };
 
 Wave::Wave(RIFF_FILE_HEADER fileHeader, WAV_FORMAT_HEADER formatHeader, WAV_DATA_HEADER dataHeader, char * waveform)
@@ -127,11 +131,9 @@ Wave::~Wave()
 
 void Wave::Play()
 {
-	char * wav = (char *)malloc(sizeof(RIFF_FILE_HEADER) + sizeof(WAV_FORMAT_HEADER) + sizeof(WAV_DATA_HEADER) + this->dataHeader.Size * sizeof(char));
-	memcpy(&wav[0], &this->fileHeader, sizeof(RIFF_FILE_HEADER));
-	memcpy(&wav[sizeof(RIFF_FILE_HEADER)], &this->formatHeader, sizeof(WAV_FORMAT_HEADER));
-	memcpy(&wav[sizeof(RIFF_FILE_HEADER) + sizeof(WAV_FORMAT_HEADER)], &this->dataHeader, sizeof(WAV_DATA_HEADER));
-	memcpy(&wav[sizeof(RIFF_FILE_HEADER) + sizeof(WAV_FORMAT_HEADER) + sizeof(WAV_DATA_HEADER)], this->waveform, this->dataHeader.Size);
+	char * wav = this->GetHeaders();
+	wav = (char *)realloc(wav, SIZE_OF_HEADERS + (this->dataHeader.Size * sizeof(char)));
+	memcpy(&wav[SIZE_OF_HEADERS], this->waveform, this->dataHeader.Size * sizeof(char));
 
 	PlaySound(wav, NULL, SND_MEMORY);
 
@@ -159,21 +161,9 @@ void Wave::Open(char * filename)
 
 	std::ifstream file(filename, std::ios::binary);
 
-	file.read((char *)&this->fileHeader.ID, sizeof(unsigned long));
-	file.read((char *)&this->fileHeader.Size, sizeof(unsigned long));
-	file.read((char *)&this->fileHeader.Format, sizeof(unsigned long));
-
-	file.read((char *)&this->formatHeader.ID, sizeof(unsigned long));
-	file.read((char *)&this->formatHeader.Size, sizeof(unsigned long));
-	file.read((char *)&this->formatHeader.AudioFormat, sizeof(unsigned short));
-	file.read((char *)&this->formatHeader.Channels, sizeof(unsigned short));
-	file.read((char *)&this->formatHeader.SampleRate, sizeof(unsigned long));
-	file.read((char *)&this->formatHeader.ByteRate, sizeof(unsigned long));
-	file.read((char *)&this->formatHeader.BlockAlign, sizeof(unsigned short));
-	file.read((char *)&this->formatHeader.BitsPerSample, sizeof(unsigned short));
-
-	file.read((char *)&this->dataHeader.ID, sizeof(unsigned long));
-	file.read((char *)&this->dataHeader.Size, sizeof(unsigned long));
+	char headers[SIZE_OF_HEADERS];
+	file.read(headers, SIZE_OF_HEADERS);
+	this->SetHeaders(headers);
 
 	this->waveform = (char *)malloc(this->dataHeader.Size * sizeof(char));
 	this->createdWaveform = true;
@@ -188,21 +178,9 @@ void Wave::Save(char * filename)
 {
 	std::ofstream file(filename, std::ios::binary);
 
-	file.write((char *)&this->fileHeader.ID, sizeof(unsigned long));
-	file.write((char *)&this->fileHeader.Size, sizeof(unsigned long));
-	file.write((char *)&this->fileHeader.Format, sizeof(unsigned long));
-
-	file.write((char *)&this->formatHeader.ID, sizeof(unsigned long));
-	file.write((char *)&this->formatHeader.Size, sizeof(unsigned long));
-	file.write((char *)&this->formatHeader.AudioFormat, sizeof(unsigned short));
-	file.write((char *)&this->formatHeader.Channels, sizeof(unsigned short));
-	file.write((char *)&this->formatHeader.SampleRate, sizeof(unsigned long));
-	file.write((char *)&this->formatHeader.ByteRate, sizeof(unsigned long));
-	file.write((char *)&this->formatHeader.BlockAlign, sizeof(unsigned short));
-	file.write((char *)&this->formatHeader.BitsPerSample, sizeof(unsigned short));
-
-	file.write((char *)&this->dataHeader.ID, sizeof(unsigned long));
-	file.write((char *)&this->dataHeader.Size, sizeof(unsigned long));
+	char * headers = this->GetHeaders();
+	file.write(headers, SIZE_OF_HEADERS);
+	free(headers);
 
 	file.write(this->waveform, this->dataHeader.Size);
 
@@ -238,14 +216,14 @@ void Wave::Demodulate(double carrierFrequency, char * carrierWaveform, double mo
 {
 	for (int t = 0; t < (int)this->dataHeader.Size; t++)
 		if (type == AMPLITUDE_MODULATION)
-			this->waveform[t] = (((((carrierWaveform[t] & 0x000000FF) - 127.0) / 127.0) - 127.0) * (1 + modulationIndex)) / (127.0 * modulationIndex * cos(2.0 * PI * carrierFrequency / this->formatHeader.SampleRate * t)) - 1.0;
+			this->waveform[t] = (char)((((((carrierWaveform[t] & 0x000000FF) - 127.0) / 127.0) - 127.0) * (1 + modulationIndex)) / (127.0 * modulationIndex * cos(2.0 * PI * carrierFrequency / this->formatHeader.SampleRate * t)) - 1.0);
 }
 
 void Wave::SetSampleRate(int sampleRate)
 {
 	this->formatHeader.SampleRate = sampleRate;
 	this->formatHeader.ByteRate = this->formatHeader.SampleRate;
-	this->dataHeader.Size = this->formatHeader.SampleRate * this->duration;
+	this->dataHeader.Size = (unsigned long)(this->formatHeader.SampleRate * this->duration);
 
 	this->fileHeader.Size = 36 + this->dataHeader.Size;
 
@@ -260,10 +238,10 @@ int Wave::GetSampleRate()
 	return this->formatHeader.SampleRate;
 }
 
-void Wave::SetDuration(int duration)
+void Wave::SetDuration(double duration)
 {
 	this->duration = duration;
-	this->dataHeader.Size = this->formatHeader.SampleRate * duration;
+	this->dataHeader.Size = (unsigned long)(this->formatHeader.SampleRate * duration);
 
 	this->fileHeader.Size = 36 + this->dataHeader.Size;
 
@@ -273,7 +251,7 @@ void Wave::SetDuration(int duration)
 	this->waveform = (char *)malloc(this->dataHeader.Size * sizeof(char));
 	this->createdWaveform = true;
 }
-int Wave::GetDuration()
+double Wave::GetDuration()
 {
 	return this->duration;
 }
@@ -307,7 +285,7 @@ void Wave::SetHeaders(int sampleRate, double duration)
 	this->formatHeader.BitsPerSample = 8;
 
 	this->dataHeader.ID = 0x61746164; // "data"
-	this->dataHeader.Size = this->formatHeader.SampleRate * duration;
+	this->dataHeader.Size = (unsigned long)(this->formatHeader.SampleRate * duration);
 
 	this->fileHeader.Size = 36 + this->dataHeader.Size;
 
@@ -319,6 +297,50 @@ void Wave::SetHeaders(RIFF_FILE_HEADER fileHeader, WAV_FORMAT_HEADER formatHeade
 	this->formatHeader = formatHeader;
 	this->dataHeader = dataHeader;
 	this->duration = dataHeader.Size / formatHeader.SampleRate;
+}
+void Wave::SetHeaders(char * headers)
+{
+	int index = 0;
+
+	this->fileHeader.ID = *(unsigned long *)&headers[index]; index += sizeof(unsigned long);
+	this->fileHeader.Size = *(unsigned long *)&headers[index]; index += sizeof(unsigned long);
+	this->fileHeader.Format = *(unsigned long *)&headers[index]; index += sizeof(unsigned long);
+
+	this->formatHeader.ID = *(unsigned long *)&headers[index]; index += sizeof(unsigned long);
+	this->formatHeader.Size = *(unsigned long *)&headers[index]; index += sizeof(unsigned long);
+	this->formatHeader.AudioFormat = *(unsigned short *)&headers[index]; index += sizeof(unsigned short);
+	this->formatHeader.Channels = *(unsigned short *)&headers[index]; index += sizeof(unsigned short);
+	this->formatHeader.SampleRate = *(unsigned long *)&headers[index]; index += sizeof(unsigned long);
+	this->formatHeader.ByteRate = *(unsigned long *)& headers[index]; index += sizeof(unsigned long);
+	this->formatHeader.BlockAlign = *(unsigned short *)&headers[index]; index += sizeof(unsigned short);
+	this->formatHeader.BitsPerSample = *(unsigned short *)&headers[index]; index += sizeof(unsigned short);
+
+	this->dataHeader.ID = *(unsigned long *)&headers[index]; index += sizeof(unsigned long);
+	this->dataHeader.Size = *(unsigned long *)&headers[index];
+}
+char * Wave::GetHeaders()
+{
+	char * headers = (char *)malloc(SIZE_OF_HEADERS);
+
+	int index = 0;
+
+	*(unsigned long*)&headers[index] = this->fileHeader.ID; index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = this->fileHeader.Size; index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = this->fileHeader.Format; index += sizeof(unsigned long);
+
+	*(unsigned long*)&headers[index] = this->formatHeader.ID; index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = this->formatHeader.Size; index += sizeof(unsigned long);
+	*(unsigned short*)&headers[index] = this->formatHeader.AudioFormat; index += sizeof(unsigned short);
+	*(unsigned short*)&headers[index] = this->formatHeader.Channels; index += sizeof(unsigned short);
+	*(unsigned long*)&headers[index] = this->formatHeader.SampleRate; index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = this->formatHeader.ByteRate; index += sizeof(unsigned long);
+	*(unsigned short*)&headers[index] = this->formatHeader.BlockAlign; index += sizeof(unsigned short);
+	*(unsigned short*)&headers[index] = this->formatHeader.BitsPerSample; index += sizeof(unsigned short);
+
+	*(unsigned long*)&headers[index] = this->dataHeader.ID; index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = this->dataHeader.Size;
+
+	return headers;
 }
 
 #endif
