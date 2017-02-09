@@ -81,6 +81,8 @@ private:
 	char * waveform;
 	bool createdWaveform;
 	double duration;
+
+	void SetHeaders(int samplerate, double duration);
 };
 
 Wave::Wave(RIFF_FILE_HEADER fileHeader, WAV_FORMAT_HEADER formatHeader, WAV_DATA_HEADER dataHeader, char * waveform)
@@ -103,48 +105,14 @@ Wave::Wave(RIFF_FILE_HEADER fileHeader, WAV_FORMAT_HEADER formatHeader, WAV_DATA
 }
 Wave::Wave(int sampleRate, double duration, char * waveform)
 {
-	this->fileHeader.ID = 0x46464952; // "RIFF"
-	this->fileHeader.Format = 0x45564157; // "WAVE"
-
-	this->formatHeader.ID = 0x20746D66; // "fmt "
-	this->formatHeader.Size = 16;
-	this->formatHeader.AudioFormat = 1;
-	this->formatHeader.Channels = 1;
-	this->formatHeader.SampleRate = sampleRate;
-	this->formatHeader.ByteRate = this->formatHeader.SampleRate;
-	this->formatHeader.BlockAlign = 1;
-	this->formatHeader.BitsPerSample = 8;
-
-	this->dataHeader.ID = 0x61746164; // "data"
-	this->dataHeader.Size = this->formatHeader.SampleRate * duration;
-
-	this->fileHeader.Size = 36 + this->dataHeader.Size;
-
-	this->duration = duration;
+	this->SetHeaders(sampleRate, duration);
 
 	this->waveform = waveform;
 	this->createdWaveform = false;
 }
 Wave::Wave(int sampleRate, double duration)
 {
-	this->fileHeader.ID = 0x46464952; // "RIFF"
-	this->fileHeader.Format = 0x45564157; // "WAVE"
-
-	this->formatHeader.ID = 0x20746D66; // "fmt "
-	this->formatHeader.Size = 16;
-	this->formatHeader.AudioFormat = 1;
-	this->formatHeader.Channels = 1;
-	this->formatHeader.SampleRate = sampleRate;
-	this->formatHeader.ByteRate = this->formatHeader.SampleRate;
-	this->formatHeader.BlockAlign = 1;
-	this->formatHeader.BitsPerSample = 8;
-
-	this->dataHeader.ID = 0x61746164; // "data"
-	this->dataHeader.Size = this->formatHeader.SampleRate * duration;
-
-	this->fileHeader.Size = 36 + this->dataHeader.Size;
-
-	this->duration = duration;
+	this->SetHeaders(sampleRate, duration);
 
 	this->waveform = (char *)malloc(this->dataHeader.Size * sizeof(char));
 	this->createdWaveform = true;
@@ -325,6 +293,28 @@ void Wave::SetWaveform(char * waveform)
 char * Wave::GetWaveform()
 {
 	return this->waveform;
+}
+
+void Wave::SetHeaders(int sampleRate, double duration)
+{
+	this->fileHeader.ID = 0x46464952; // "RIFF"
+	this->fileHeader.Format = 0x45564157; // "WAVE"
+
+	this->formatHeader.ID = 0x20746D66; // "fmt "
+	this->formatHeader.Size = 16;
+	this->formatHeader.AudioFormat = 1;
+	this->formatHeader.Channels = 1;
+	this->formatHeader.SampleRate = sampleRate;
+	this->formatHeader.ByteRate = this->formatHeader.SampleRate;
+	this->formatHeader.BlockAlign = 1;
+	this->formatHeader.BitsPerSample = 8;
+
+	this->dataHeader.ID = 0x61746164; // "data"
+	this->dataHeader.Size = this->formatHeader.SampleRate * duration;
+
+	this->fileHeader.Size = 36 + this->dataHeader.Size;
+
+	this->duration = duration;
 }
 
 #endif
