@@ -60,18 +60,17 @@ public:
 
 	void Generate(double frequency, int type);
 
- 	void Modulate(double carrierFrequency, double modulationFrequency, double modulationIndex, int type);
+	void Modulate(double carrierFrequency, double modulationFrequency, double modulationIndex, int type);
 	void Modulate(double carrierFrequency, char * modulationWaveform, double modulationIndex, int type);
 	void Demodulate(double carrierFrequency, char * carrierWaveform, double modulationIndex, int type);
 
-	
 	void SetSampleRate(int sampleRate);
 	int GetSampleRate();
 
 	void SetDuration(int duration);
 	int GetDuration();
 
-*	void SetWaveform(char * waveform);
+	void SetWaveform(char * waveform);
 	char * GetWaveform();
 
 private:
@@ -124,7 +123,6 @@ Wave::Wave(int sampleRate, double duration, char * waveform)
 	this->duration = duration;
 
 	this->waveform = waveform;
-	
 	this->createdWaveform = false;
 }
 Wave::Wave(int sampleRate, double duration)
@@ -148,7 +146,7 @@ Wave::Wave(int sampleRate, double duration)
 
 	this->duration = duration;
 
-	this->waveform = (char *)malloc(this->dataHeader.Size);
+	this->waveform = (char *)malloc(this->dataHeader.Size * sizeof(char));
 	this->createdWaveform = true;
 }
 Wave::Wave(char * filename)
@@ -164,7 +162,7 @@ Wave::~Wave()
 
 void Wave::Play()
 {
-	char * wav = (char *)malloc(sizeof(RIFF_FILE_HEADER) + sizeof(WAV_FORMAT_HEADER) + sizeof(WAV_DATA_HEADER) + this->dataHeader.Size);
+	char * wav = (char *)malloc(sizeof(RIFF_FILE_HEADER) + sizeof(WAV_FORMAT_HEADER) + sizeof(WAV_DATA_HEADER) + this->dataHeader.Size * sizeof(char));
 	memcpy(&wav[0], &this->fileHeader, sizeof(RIFF_FILE_HEADER));
 	memcpy(&wav[sizeof(RIFF_FILE_HEADER)], &this->formatHeader, sizeof(WAV_FORMAT_HEADER));
 	memcpy(&wav[sizeof(RIFF_FILE_HEADER) + sizeof(WAV_FORMAT_HEADER)], &this->dataHeader, sizeof(WAV_DATA_HEADER));
@@ -212,7 +210,7 @@ void Wave::Open(char * filename)
 	file.read((char *)&this->dataHeader.ID, sizeof(unsigned long));
 	file.read((char *)&this->dataHeader.Size, sizeof(unsigned long));
 
-	this->waveform = (char *)malloc(this->dataHeader.Size);
+	this->waveform = (char *)malloc(this->dataHeader.Size * sizeof(char));
 	this->createdWaveform = true;
 
 	file.read(this->waveform, this->dataHeader.Size);
@@ -289,7 +287,7 @@ void Wave::SetSampleRate(int sampleRate)
 	if (this->createdWaveform)
 		free(this->waveform);
 
-	this->waveform = (char *)malloc(this->dataHeader.Size);
+	this->waveform = (char *)malloc(this->dataHeader.Size * sizeof(char));
 	this->createdWaveform = true;
 }
 int Wave::GetSampleRate()
@@ -307,7 +305,7 @@ void Wave::SetDuration(int duration)
 	if (this->createdWaveform)
 		free(this->waveform);
 
-	this->waveform = (char *)malloc(this->dataHeader.Size);
+	this->waveform = (char *)malloc(this->dataHeader.Size * sizeof(char));
 	this->createdWaveform = true;
 }
 int Wave::GetDuration()
