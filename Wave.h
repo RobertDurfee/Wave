@@ -1,9 +1,9 @@
 #ifndef WAVE_HEADER
 #define WAVE_HEADER
 
-#include <fstream>		//ifstream, ofstream
+#include <fstream>	//ifstream, ofstream
 #include <Windows.h>	//PlaySound()
-#include <sstream>		//stringstream
+#include <sstream>	//stringstream
 
 struct ResourceInterchangeFileFormatHeader
 {
@@ -278,20 +278,20 @@ void Wave::SetHeaders(char * headers)
 	int index = 0;
 
 	//memcpy() is not used due to compiler-specfic structure padding
-	fileHeader.ID = *(unsigned long *)&headers[index];					index += sizeof(unsigned long);
-	fileHeader.Size = *(unsigned long *)&headers[index];				index += sizeof(unsigned long);
-	fileHeader.Format = *(unsigned long *)&headers[index];				index += sizeof(unsigned long);
+	fileHeader.ID = *(unsigned long *)&headers[index];			index += sizeof(unsigned long);
+	fileHeader.Size = *(unsigned long *)&headers[index];			index += sizeof(unsigned long);
+	fileHeader.Format = *(unsigned long *)&headers[index];			index += sizeof(unsigned long);
 
-	formatHeader.ID = *(unsigned long *)&headers[index];				index += sizeof(unsigned long);
-	formatHeader.Size = *(unsigned long *)&headers[index];				index += sizeof(unsigned long);
+	formatHeader.ID = *(unsigned long *)&headers[index];			index += sizeof(unsigned long);
+	formatHeader.Size = *(unsigned long *)&headers[index];			index += sizeof(unsigned long);
 	formatHeader.AudioFormat = *(unsigned short *)&headers[index];		index += sizeof(unsigned short);
-	formatHeader.Channels = *(unsigned short *)&headers[index];			index += sizeof(unsigned short);
+	formatHeader.Channels = *(unsigned short *)&headers[index];		index += sizeof(unsigned short);
 	formatHeader.SampleRate = *(unsigned long *)&headers[index];		index += sizeof(unsigned long);
-	formatHeader.ByteRate = *(unsigned long *)& headers[index];			index += sizeof(unsigned long);
+	formatHeader.ByteRate = *(unsigned long *)& headers[index];		index += sizeof(unsigned long);
 	formatHeader.BlockAlign = *(unsigned short *)&headers[index];		index += sizeof(unsigned short);
 	formatHeader.BitsPerSample = *(unsigned short *)&headers[index];	index += sizeof(unsigned short);
 
-	dataHeader.ID = *(unsigned long *)&headers[index];					index += sizeof(unsigned long);
+	dataHeader.ID = *(unsigned long *)&headers[index];			index += sizeof(unsigned long);
 	dataHeader.Size = *(unsigned long *)&headers[index];
 }
 char * Wave::GetHeaders()
@@ -301,20 +301,20 @@ char * Wave::GetHeaders()
 	int index = 0;
 
 	//memcpy() is not used due to compiler-specfic structure padding
-	*(unsigned long*)&headers[index] = fileHeader.ID;					index += sizeof(unsigned long);
-	*(unsigned long*)&headers[index] = fileHeader.Size;					index += sizeof(unsigned long);
-	*(unsigned long*)&headers[index] = fileHeader.Format;				index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = fileHeader.ID;			index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = fileHeader.Size;			index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = fileHeader.Format;			index += sizeof(unsigned long);
 
-	*(unsigned long*)&headers[index] = formatHeader.ID;					index += sizeof(unsigned long);
-	*(unsigned long*)&headers[index] = formatHeader.Size;				index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = formatHeader.ID;			index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = formatHeader.Size;			index += sizeof(unsigned long);
 	*(unsigned short*)&headers[index] = formatHeader.AudioFormat;		index += sizeof(unsigned short);
-	*(unsigned short*)&headers[index] = formatHeader.Channels;			index += sizeof(unsigned short);
-	*(unsigned long*)&headers[index] = formatHeader.SampleRate;			index += sizeof(unsigned long);
-	*(unsigned long*)&headers[index] = formatHeader.ByteRate;			index += sizeof(unsigned long);
+	*(unsigned short*)&headers[index] = formatHeader.Channels;		index += sizeof(unsigned short);
+	*(unsigned long*)&headers[index] = formatHeader.SampleRate;		index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = formatHeader.ByteRate;		index += sizeof(unsigned long);
 	*(unsigned short*)&headers[index] = formatHeader.BlockAlign;		index += sizeof(unsigned short);
 	*(unsigned short*)&headers[index] = formatHeader.BitsPerSample;		index += sizeof(unsigned short);
 
-	*(unsigned long*)&headers[index] = dataHeader.ID;					index += sizeof(unsigned long);
+	*(unsigned long*)&headers[index] = dataHeader.ID;			index += sizeof(unsigned long);
 	*(unsigned long*)&headers[index] = dataHeader.Size;
 
 	return headers;
