@@ -28,6 +28,7 @@ void Play();
 ```
 The `Play` method allows Windows users to play the sampled waveform through the Win32 `PlaySound` function. The method requires all `Wave` file information to be filled out before the `PlaySound` function will work. All the necessary information should be provided through one of the constructors.
 
+
 ### Plotting
 ```
 void Plot(double duration, int quality);
@@ -82,3 +83,21 @@ These are pretty self-explanatory methods that allow the user to set and get imp
 ```
 The allocated sampled waveform will be deallocated by the destructor. 
 
+### Example
+```
+#include "Wave.h"
+
+int main()
+{
+  Wave sound(48000, 10);
+
+	sound.Generate(880, SINE_WAVE);
+
+	sound.Play();
+
+	sound.Save("test.wav");
+
+	return 0;
+}
+```
+Generates a 880 Hz sine wave with a sample rate of 48000 samples per second, plays it, and then saves it as "test.wav".
