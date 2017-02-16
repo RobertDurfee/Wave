@@ -5,6 +5,8 @@
 #include <Windows.h>	//PlaySound()
 #include <sstream>	//stringstream
 
+#pragma comment(lib, "Winmm.lib")
+
 struct ResourceInterchangeFileFormatHeader
 {
 	unsigned long ID;
@@ -214,7 +216,7 @@ void Wave::Demodulate(double carrierFrequency, char * carrierWaveform, double mo
 
 void Wave::SetSampleRate(int sampleRate)
 {
-	SetHeaders(sampleRate, dataHeader / formatHeader.SampleRate);
+	SetHeaders(sampleRate, dataHeader.Size / formatHeader.SampleRate);
 
 	ResizeWaveform();
 }
