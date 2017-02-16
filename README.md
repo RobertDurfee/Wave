@@ -53,7 +53,7 @@ void Generate(double frequency, int type);
 ```
 The `Generate` method allows the user to generate a sine or cosine wave of any `frequency` at the current `sampleRate` and `duration`. The type of waveform is specified through `type` using one of two constants: `SINE_WAVE` and `COSINE_WAVE`. The `SQUARE_WAVE` is currently not supported.
 
-### Modulating
+	### Modulating
 ```
 void Modulate(double carrierFrequency, double modulationFrequency, double modulationIndex, int type);
 void Modulate(double carrierFrequency, char * modulationWaveform, double modulationIndex, int type);
@@ -89,7 +89,7 @@ The allocated sampled waveform will be deallocated by the destructor.
 
 int main()
 {
-  Wave sound(48000, 10);
+  	Wave sound(48000, 10);
 
 	sound.Generate(880, SINE_WAVE);
 
