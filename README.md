@@ -1,6 +1,9 @@
 # Wave
 C++ class for wave file creating, playing, plotting, modulating, and demodulating. 
 
+### Disclaimer
+This is not production-worthy code! View this simply as a proof-of-concept.
+
 ### Initialization
 ```
 Wave(ResourceInterchangeFileFormatHeader fileHeader, WaveFormatHeader formatHeader, WaveDataHeader dataHeader, char * waveform);
