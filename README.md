@@ -89,15 +89,23 @@ The allocated sampled waveform will be deallocated by the destructor.
 
 int main()
 {
-  	Wave sound(48000, 10);
+	Wave sound(48000, 5);
 
 	sound.Generate(880, SINE_WAVE);
 
+	sound.Save("demodulated.wav");
 	sound.Play();
 
-	sound.Save("test.wav");
+	sound.Modulate(880, 10, 1.0, AMPLITUDE_MODULATION);
+
+	sound.Save("modulated.wav");
+	sound.Play();
+
+	sound.Plot(1, 1);
 
 	return 0;
 }
 ```
-Generates a 880 Hz sine wave with a sample rate of 48000 samples per second, plays it, and then saves it as "test.wav".
+Generates a `5` second `880` Hz `sine` wave with a sample rate of `48000` samples per second, saves it as `"demodulated.wav"`, and then plays it. Then, it creates a modulated waveform with a carrier frequency of `880` Hz, a modulation frequency of `10` Hz, and an index of `1.0` with the same sample rate and duration. It saves the new waveform as `"modulated.wav"`, plays it, and then plots `1` second with 100% quality (designated by the `1` which means use every sample, skipping none) which is shown below.
+
+![Modulated Waveform](https://raw.githubusercontent.com/RobertDurfee/Wave/master/Modulated.png)
