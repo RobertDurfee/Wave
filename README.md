@@ -83,6 +83,35 @@ These are pretty self-explanatory methods that allow the user to set and get imp
 ```
 The allocated sampled waveform will be deallocated by the destructor. 
 
+### Structures
+```C++
+struct ResourceInterchangeFileFormatHeader
+{
+	unsigned long ID;
+	unsigned long Size;
+	unsigned long Format;
+};
+
+struct WaveFormatHeader
+{
+	unsigned long ID;
+	unsigned long Size;
+	unsigned short AudioFormat;
+	unsigned short Channels;
+	unsigned long SampleRate;
+	unsigned long ByteRate;
+	unsigned short BlockAlign;
+	unsigned short BitsPerSample;
+};
+
+struct WaveDataHeader
+{
+	unsigned long ID;
+	unsigned long Size;
+};
+```
+These structures define the necessary headers for a `Wave` file. More information about these header fields and what they mean can be found [here](http://soundfile.sapp.org/doc/WaveFormat/).
+
 ### Example
 ```C++
 #include "Wave.h"
